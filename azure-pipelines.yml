@@ -16,14 +16,21 @@ steps:
   inputs:
     restoreSolution: '$(solution)'
 
+# Build ONLY the ASP.NET web project (ignore .modelproj)
 - task: VSBuild@1
   inputs:
-    solution: '$(solution)'
+    solution: 'PartsUnlimited-aspnet45/src/PartsUnlimitedWebsite/PartsUnlimitedWebsite.csproj'
     msbuildArgs: '/p:DeployOnBuild=true /p:WebPublishMethod=Package /p:PackageAsSingleFile=true /p:SkipInvalidConfigurations=true /p:PackageLocation="$(build.artifactStagingDirectory)"'
     platform: '$(buildPlatform)'
     configuration: '$(buildConfiguration)'
 
-- task: VSTest@2
+# Optional: run tests (skip if not needed)
+# - task: VSTest@2
+#   inputs:
+#     platform: '$(buildPlatform)'
+#     configuration: '$(buildConfiguration)'
+
+- task: PublishBuildArtifacts@1
   inputs:
-    platform: '$(buildPlatform)'
-    configuration: '$(buildConfiguration)'
+    pathToPublish: '$(build.artifactStagingDirectory)'
+    artifactName: 'drop'

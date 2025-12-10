@@ -15,6 +15,15 @@ variables:
   buildConfiguration: 'Release'
 
 steps:
+# Install .NET Framework Developer Packs
+- powershell: |
+    Write-Host "Installing .NET Framework 4.5.1 Developer Pack..."
+    choco install netfx-4.5.1-devpack -y
+    
+    Write-Host "Installing .NET Framework 4.6.1 Developer Pack..."
+    choco install netfx-4.6.1-devpack -y
+  displayName: 'Install .NET Framework Developer Packs'
+
 - task: NuGetToolInstaller@1
 
 - task: NuGetCommand@2

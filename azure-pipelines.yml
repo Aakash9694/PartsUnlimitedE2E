@@ -1,5 +1,10 @@
-trigger:
+# Run pipeline only when a Pull Request is created or updated
+pr:
 - master
+
+# No CI trigger on push (prevents duplicate builds)
+# trigger:
+# - master
 
 pool:
   vmImage: 'windows-2019'
@@ -16,19 +21,12 @@ steps:
   inputs:
     restoreSolution: '$(solution)'
 
-# Build ONLY the ASP.NET web project (ignore .modelproj)
 - task: VSBuild@1
   inputs:
     solution: 'PartsUnlimited-aspnet45/src/PartsUnlimitedWebsite/PartsUnlimitedWebsite.csproj'
     msbuildArgs: '/p:DeployOnBuild=true /p:WebPublishMethod=Package /p:PackageAsSingleFile=true /p:SkipInvalidConfigurations=true /p:PackageLocation="$(build.artifactStagingDirectory)"'
     platform: '$(buildPlatform)'
     configuration: '$(buildConfiguration)'
-
-# Optional: run tests (skip if not needed)
-# - task: VSTest@2
-#   inputs:
-#     platform: '$(buildPlatform)'
-#     configuration: '$(buildConfiguration)'
 
 - task: PublishBuildArtifacts@1
   inputs:

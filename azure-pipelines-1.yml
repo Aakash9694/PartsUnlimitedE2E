@@ -1,28 +1,53 @@
 trigger:
 - master
+
 pool:
   vmImage: 'windows-latest'
+
+variables:
+  solution: '**/*.sln'
+  buildPlatform: 'Any CPU'
+  buildConfiguration: 'Release'
+
 steps:
-- task: UseDotNet@2
+# Install required .NET Framework Developer Packs
+- powershell: |
+    Write-Host "Installing .NET Framework 4.5.1 Developer Pack..."
+    choco install netfx-4.5.1-devpack -y
+    
+    Write-Host "Installing .NET Framework 4.6.1 Developer Pack..."
+    choco install netfx-4.6.1-devpack -y
+  displayName: 'Install .NET Framework Developer Packs'
+
+# Install NuGet tool
+- task: NuGetToolInstaller@1
+  displayName: 'Install NuGet'
+
+# Restore NuGet packages
+- task: NuGetCommand@2
+  displayName: 'Restore NuGet Packages'
   inputs:
-    packageType: 'sdk'
-    version: '8.x'
-- task: DotNetCoreCLI@2
+    restoreSolution: '$(solution)'
+
+# Build using MSBuild (for .NET Framework projects)
+- task: VSBuild@1
+  displayName: 'Build Solution'
   inputs:
-    command: restore
-    projects: '**/*.csproj'
-- task: DotNetCoreCLI@2
+    solution: '$(solution)'
+    msbuildArgs: '/p:DeployOnBuild=true /p:WebPublishMethod=Package /p:PackageAsSingleFile=true /p:SkipInvalidConfigurations=true /p:PackageLocation="$(Build.ArtifactStagingDirectory)"'
+    platform: '$(buildPlatform)'
+    configuration: '$(buildConfiguration)'
+
+# Run tests
+- task: VSTest@2
+  displayName: 'Run Tests'
   inputs:
-    command: build
-    projects: '**/*.csproj'
-    arguments: '--configuration Release'
-- task: DotNetCoreCLI@2
-  inputs:
-    command: publish
-    publishWebProjects: true
-    arguments: '--configuration Release --output $(Build.ArtifactStagingDirectory)'
-    zipAfterPublish: true
+    platform: '$(buildPlatform)'
+    configuration: '$(buildConfiguration)'
+
+# Publish artifacts
 - task: PublishBuildArtifacts@1
+  displayName: 'Publish Artifacts'
   inputs:
     pathToPublish: '$(Build.ArtifactStagingDirectory)'
     artifactName: 'drop'
